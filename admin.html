@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eid Portal — Admin</title>
+<title>Greeting Card Portal — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root{--gold:#F5CE3E;--gold2:#e8a800;--bg:#0f0818;--card:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.09);--text:#fff;--muted:rgba(255,255,255,0.45);}
@@ -64,7 +64,7 @@
 <body>
 
 <div id="login">
-  <h1>&#x1F512; Eid Portal Admin</h1>
+  <h1>&#x1F512; Greeting Card Portal</h1>
   <p>Enter your password to continue</p>
   <div class="lbox">
     <input type="password" id="pw" placeholder="Password" autocomplete="current-password" />
@@ -76,7 +76,7 @@
 <div id="app">
   <div class="topbar">
     <div>
-      <h1>Eid Portal Admin</h1>
+      <h1>Greeting Card Portal</h1>
       <div class="sub" id="curEvent">&nbsp;</div>
     </div>
     <button class="btn-ghost" onclick="logout()">Sign out</button>
@@ -84,19 +84,35 @@
 
   <div class="content">
 
+    <!-- PAGE TEXT -->
+    <div class="panel">
+      <h2>Page Text</h2>
+      <div class="hint">Everything shown on the card page. Leave the heading and subtitle blank to show no text at all above the card. Nothing here is tied to a specific occasion.</div>
+      <div class="two">
+        <div class="fld">Heading when open (optional)
+          <input type="text" id="pageTitle" placeholder="e.g. عيدكم مبارك — or leave blank" />
+        </div>
+        <div class="fld">Subtitle when open (optional)
+          <input type="text" id="subtitle" placeholder="e.g. Generate your personalised greeting card" />
+        </div>
+        <div class="fld">Heading when closed
+          <input type="text" id="closedTitle" placeholder="Coming Soon" />
+        </div>
+        <div class="fld">Message when closed
+          <input type="text" id="headline" placeholder="e.g. See you at Ramadan" />
+        </div>
+      </div>
+      <button class="btn" style="margin-top:12px;width:100%" onclick="saveText()">Save page text</button>
+    </div>
+
     <!-- PORTAL GATE -->
     <div class="panel">
       <h2>Portal Gate</h2>
-      <div class="hint">When closed, employees who open the card link see a "Coming Soon" message instead of the form.</div>
+      <div class="hint">When closed, employees who open the card link see the closed heading and message instead of the form.</div>
       <div class="row">
         <span id="statusPill" class="pill-status st-open"><span class="dot"></span> OPEN</span>
         <button class="btn" style="flex:1;min-width:160px" onclick="toggleStatus()" id="toggleBtn">Close Portal</button>
       </div>
-      <div style="margin-top:14px" class="fld">
-        Message shown when closed (optional)
-        <input type="text" id="headline" placeholder="e.g. See you at Eid Al-Fitr!" />
-      </div>
-      <button class="btn-ghost" style="margin-top:10px;width:100%" onclick="saveHeadline()">Save message</button>
     </div>
 
     <!-- IMAGE + PILL -->
@@ -202,6 +218,9 @@ async function showApp(){
   if(d.error){ sessionStorage.removeItem('eidToken'); location.reload(); return; }
   CFG=d.config; IMG_B64=d.image;
   document.getElementById('curEvent').textContent='Current event: '+(CFG.eventName||'-');
+  document.getElementById('pageTitle').value=CFG.pageTitle||'';
+  document.getElementById('subtitle').value=CFG.subtitle||'';
+  document.getElementById('closedTitle').value=CFG.closedTitle||'';
   document.getElementById('headline').value=CFG.headline||'';
   document.getElementById('nameSize').value=CFG.nameSize;
   document.getElementById('titleSize').value=CFG.titleSize;
@@ -241,9 +260,13 @@ async function toggleStatus(){
   else toast(d.error||'Failed');
 }
 
-async function saveHeadline(){
-  var d=await api({action:'saveConfig',headline:document.getElementById('headline').value});
-  if(d.config){ CFG=d.config; toast('Message saved'); } else toast(d.error||'Failed');
+async function saveText(){
+  var d=await api({action:'saveConfig',
+    pageTitle:document.getElementById('pageTitle').value,
+    subtitle:document.getElementById('subtitle').value,
+    closedTitle:document.getElementById('closedTitle').value,
+    headline:document.getElementById('headline').value});
+  if(d.config){ CFG=d.config; toast('Page text saved'); } else toast(d.error||'Failed');
 }
 
 function renderEvents(list){

@@ -88,7 +88,7 @@
     <div id="tableArea"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
-  <div class="footer">Abdul Latif Jameel &middot; Eid Card Portal</div>
+  <div class="footer">Abdul Latif Jameel &middot; Greeting Card Portal</div>
 </div>
 
 <script>
@@ -175,7 +175,7 @@ async function loadData(sheet){
         }).join('')+
         '</tbody></table></div>'+
       '</div>'
-      : '<div class="table-card"><div class="empty">&#x1F319; No cards generated yet<br>Share the link with employees!</div></div>';
+      : '<div class="table-card"><div class="empty">&#x1F4ED; No cards generated yet<br>Share the link with employees!</div></div>';
 
   }catch(e){
     document.getElementById('statsArea').innerHTML='<div class="error-box"><strong>Could not load data</strong><br>'+esc(e.message)+'</div>';

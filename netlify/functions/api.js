@@ -158,6 +158,9 @@ const DEFAULTS = {
   nameSize: '47',
   titleSize: '34',
   gap: '12',
+  pageTitle: '',
+  subtitle: 'Generate your personalised greeting card',
+  closedTitle: 'Coming Soon',
   headline: ''
 };
 
@@ -237,14 +240,19 @@ exports.handler = async function (event) {
     if (action === 'getPublicConfig') {
       const cfg = await readConfig();
       if (cfg.status !== 'open') {
-        return ok({ status: cfg.status, headline: cfg.headline || '' });
+        return ok({
+          status: cfg.status,
+          closedTitle: cfg.closedTitle || 'Coming Soon',
+          headline: cfg.headline || ''
+        });
       }
       const image = await readImage();
       return ok({
         status: 'open',
         image: image,
         eventName: cfg.eventName,
-        headline: cfg.headline || '',
+        pageTitle: cfg.pageTitle || '',
+        subtitle: cfg.subtitle || '',
         pill: {
           top: Number(cfg.pillTop),
           bottom: Number(cfg.pillBottom),
@@ -296,7 +304,8 @@ exports.handler = async function (event) {
 
     if (action === 'saveConfig') {
       const allowed = ['status', 'eventName', 'eventSheet', 'pillTop', 'pillBottom',
-                       'pillCenterX', 'pillMaxW', 'nameSize', 'titleSize', 'gap', 'headline'];
+                       'pillCenterX', 'pillMaxW', 'nameSize', 'titleSize', 'gap',
+                       'pageTitle', 'subtitle', 'closedTitle', 'headline'];
       const patch = {};
       allowed.forEach(k => { if (body[k] !== undefined) patch[k] = body[k]; });
       const merged = await writeConfig(patch);

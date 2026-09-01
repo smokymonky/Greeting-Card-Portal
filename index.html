@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Eid Card Generator</title>
+<title>Greeting Card</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-56Q0VC3Q3K"></script>
 <script>
@@ -48,22 +48,22 @@
 </head>
 <body>
 <div id="blockScreen">
-  <div style="font-size:3rem;">&#x1F319;</div>
-  <h2 style="color:#f5d060;font-size:1.4rem;font-weight:800;font-family:'Tajawal',sans-serif;">&#x639;&#x64A;&#x62F;&#x643;&#x645; &#x645;&#x628;&#x627;&#x631;&#x643;</h2>
-  <p style="color:rgba(255,255,255,0.8);font-family:'Tajawal',sans-serif;font-size:1rem;line-height:1.7;">This page must be opened in <b style="color:#f5d060;">Safari</b> or <b style="color:#f5d060;">Chrome</b><br>to generate and save your Eid card.</p>
+  <div style="font-size:3rem;">&#x1F310;</div>
+  <h2 style="color:#f5d060;font-size:1.4rem;font-weight:800;font-family:'Tajawal',sans-serif;">Open in your browser</h2>
+  <p style="color:rgba(255,255,255,0.8);font-family:'Tajawal',sans-serif;font-size:1rem;line-height:1.7;">This page must be opened in <b style="color:#f5d060;">Safari</b> or <b style="color:#f5d060;">Chrome</b><br>to generate and save your greeting card.</p>
   <button onclick="tryOpenBrowser()" style="background:linear-gradient(135deg,#f5d060,#e8a800);color:#1a0533;border:none;border-radius:14px;padding:16px 32px;font-size:1rem;font-family:'Tajawal',sans-serif;font-weight:800;cursor:pointer;min-height:52px;width:100%;max-width:340px;">Open in Browser</button>
 </div>
 
-<div class="header">
-  <h1 id="pageTitle">&#x639;&#x64A;&#x62F;&#x643;&#x645; &#x645;&#x628;&#x627;&#x631;&#x643;</h1>
-  <p>Generate your personalised Eid card</p>
+<div class="header" id="pageHeader" style="display:none">
+  <h1 id="pageTitle"></h1>
+  <p id="pageSub"></p>
 </div>
 
 <div id="loadingBox"><div class="spin"></div><p>Loading...</p></div>
 
 <div id="closedBox">
-  <div class="big">&#x1F319;</div>
-  <h2>Coming Soon</h2>
+  <div class="big">&#x23F3;</div>
+  <h2 id="closedTitle">Coming Soon</h2>
   <p id="closedMsg">The greeting card portal is currently closed.<br>Please check back during the next occasion.</p>
 </div>
 
@@ -84,7 +84,7 @@
 </div>
 
 <div id="resultView">
-  <img id="resultImg" src="" alt="Your Eid Card" />
+  <img id="resultImg" src="" alt="Your greeting card" />
   <div class="save-hint">
     <strong>How to save your card</strong>
     <div class="step"><b>iPhone:</b> Press &amp; hold the image above &rarr; tap <b>"Add to Photos"</b></div>
@@ -156,12 +156,19 @@ async function init(){
     var d=await api({action:'getPublicConfig'});
     document.getElementById('loadingBox').style.display='none';
     if(d.status!=='open'){
-      if(d.headline){document.getElementById('closedMsg').innerHTML=d.headline;}
+      if(d.closedTitle){document.getElementById('closedTitle').textContent=d.closedTitle;}
+      if(d.headline){document.getElementById('closedMsg').textContent=d.headline;}
       document.getElementById('closedBox').style.display='flex';
       return;
     }
     CFG=d;
-    if(d.headline){document.getElementById('pageTitle').textContent=d.headline;}
+    var hdr=document.getElementById('pageHeader');
+    var anyText=false;
+    if(d.pageTitle){document.getElementById('pageTitle').textContent=d.pageTitle;anyText=true;}
+    else{document.getElementById('pageTitle').style.display='none';}
+    if(d.subtitle){document.getElementById('pageSub').textContent=d.subtitle;anyText=true;}
+    else{document.getElementById('pageSub').style.display='none';}
+    if(anyText){hdr.style.display='block';}
     var src = d.image ? ('data:image/jpeg;base64,'+d.image) : 'template.jpg';
     document.getElementById('previewSmall').src=src;
     templateImg.onload=function(){imgReady=true;};
@@ -183,7 +190,7 @@ function generateCard(){
   document.getElementById('resultImg').src=dataURL;
   var al=document.getElementById('androidDownload');
   al.href=dataURL;
-  al.download=(name||'eid-card').replace(/\s+/g,'-')+'-Eid-Card.png';
+  al.download=(name||'greeting-card').replace(/\s+/g,'-')+'-Greeting-Card.png';
   if(!isIOS) document.getElementById('androidBtn').style.display='block';
   document.getElementById('formView').classList.remove('visible');
   document.getElementById('resultView').classList.add('visible');

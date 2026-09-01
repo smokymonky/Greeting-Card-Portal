@@ -1,4 +1,4 @@
-# Eid Greeting Card Portal
+# Greeting Card Portal
 
 Employee greeting-card generator with an admin panel and analytics dashboard.
 
