@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eid Portal — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F5CE3E;--gold2:#e8a800;--bg:#0f0818;--card:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.09);--text:#fff;--muted:rgba(255,255,255,0.45);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);background-image:radial-gradient(ellipse at top,#2d0a5e33 0%,transparent 60%);font-family:'Cairo',sans-serif;min-height:100vh;color:var(--text);padding-bottom:60px;}
+
+  /* login */
+  #login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px;}
+  #login h1{color:var(--gold);font-size:1.4rem;font-weight:900;}
+  #login p{color:var(--muted);font-size:0.85rem;margin-top:-10px;}
+  .lbox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;}
+  input[type=password],input[type=text]{background:rgba(255,255,255,0.08);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;font-family:'Cairo',sans-serif;outline:none;width:100%;}
+  input:focus{border-color:var(--gold);}
+  .btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a0533;border:none;border-radius:12px;padding:14px;font-family:'Cairo',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;min-height:50px;}
+  .btn:active{transform:scale(0.98);}
+  .btn-ghost{background:rgba(255,255,255,0.07);color:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-family:'Cairo',sans-serif;font-weight:700;cursor:pointer;}
+  .err{color:#ff8f8f;font-size:0.85rem;text-align:center;min-height:20px;}
+
+  /* app */
+  #app{display:none;}
+  .topbar{background:linear-gradient(135deg,#2d0a5e,#1a0533);padding:18px 16px;border-bottom:1px solid rgba(245,206,62,0.15);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .topbar h1{font-size:1.1rem;font-weight:900;color:var(--gold);}
+  .topbar .sub{font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .content{padding:16px;display:flex;flex-direction:column;gap:16px;max-width:820px;margin:0 auto;}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;}
+  .panel h2{font-size:0.95rem;font-weight:800;margin-bottom:4px;}
+  .panel .hint{font-size:0.78rem;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .pill-status{display:inline-flex;align-items:center;gap:8px;border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:800;}
+  .st-open{background:rgba(100,255,150,0.12);color:#64ff96;}
+  .st-closed{background:rgba(255,120,120,0.12);color:#ff8f8f;}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
+
+  /* editor */
+  #editorWrap{position:relative;display:inline-block;max-width:100%;touch-action:none;}
+  #editorImg{display:block;width:100%;max-width:380px;border-radius:12px;}
+  #pillBox{position:absolute;border:2px solid var(--gold);background:rgba(245,206,62,0.14);border-radius:10px;cursor:move;}
+  .handle{position:absolute;width:16px;height:16px;background:var(--gold);border-radius:50%;border:2px solid #1a0533;}
+  .h-nw{left:-8px;top:-8px;cursor:nwse-resize;}
+  .h-se{right:-8px;bottom:-8px;cursor:nwse-resize;}
+  #previewCanvas{width:100%;max-width:380px;border-radius:12px;display:block;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:700px){.two{grid-template-columns:1fr;}}
+  .fld{display:flex;flex-direction:column;gap:6px;font-size:0.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+  .fld input{padding:10px 12px;font-size:14px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#1a0533;border:1px solid var(--gold);color:var(--gold);padding:12px 22px;border-radius:24px;font-weight:700;font-size:0.85rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;}
+  .toast.show{opacity:1;}
+  .filebtn{display:inline-block;background:rgba(255,255,255,0.07);border:1.5px dashed var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;width:100%;color:var(--muted);font-size:0.85rem;}
+  .filebtn:hover{border-color:var(--gold);color:var(--gold);}
+  input[type=file]{display:none;}
+  .evlist{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .ev{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;font-size:0.85rem;}
+  .ev .tag{background:rgba(245,206,62,0.12);color:var(--gold);border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;}
+  .spin{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin:20px auto;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>&#x1F512; Eid Portal Admin</h1>
+  <p>Enter your password to continue</p>
+  <div class="lbox">
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password" />
+    <button class="btn" onclick="doLogin()">Sign In</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>Eid Portal Admin</h1>
+      <div class="sub" id="curEvent">&nbsp;</div>
+    </div>
+    <button class="btn-ghost" onclick="logout()">Sign out</button>
+  </div>
+
+  <div class="content">
+
+    <!-- PORTAL GATE -->
+    <div class="panel">
+      <h2>Portal Gate</h2>
+      <div class="hint">When closed, employees who open the card link see a "Coming Soon" message instead of the form.</div>
+      <div class="row">
+        <span id="statusPill" class="pill-status st-open"><span class="dot"></span> OPEN</span>
+        <button class="btn" style="flex:1;min-width:160px" onclick="toggleStatus()" id="toggleBtn">Close Portal</button>
+      </div>
+      <div style="margin-top:14px" class="fld">
+        Message shown when closed (optional)
+        <input type="text" id="headline" placeholder="e.g. See you at Eid Al-Fitr!" />
+      </div>
+      <button class="btn-ghost" style="margin-top:10px;width:100%" onclick="saveHeadline()">Save message</button>
+    </div>
+
+    <!-- IMAGE + PILL -->
+    <div class="panel">
+      <h2>Card Template</h2>
+      <div class="hint">Upload the new design, then drag the yellow box onto the pill area. Type a sample name to preview exactly what employees will see.</div>
+
+      <label class="filebtn" for="fileInput" id="fileLabel">Click to upload a new template image (JPG or PNG)</label>
+      <input type="file" id="fileInput" accept="image/*" />
+
+      <div class="two" style="margin-top:16px">
+        <div>
+          <div class="fld" style="margin-bottom:8px">Drag the box onto the pill</div>
+          <div id="editorWrap">
+            <img id="editorImg" alt="" />
+            <div id="pillBox">
+              <div class="handle h-nw" data-h="nw"></div>
+              <div class="handle h-se" data-h="se"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="fld" style="margin-bottom:8px">Live preview</div>
+          <canvas id="previewCanvas" width="1080" height="1350"></canvas>
+        </div>
+      </div>
+
+      <div class="two" style="margin-top:16px">
+        <div class="fld">Sample name<input type="text" id="sampleName" value="Alaa Aburashed" /></div>
+        <div class="fld">Sample title<input type="text" id="sampleTitle" value="Internal Communication Manager" /></div>
+        <div class="fld">Name size<input type="number" id="nameSize" value="47" /></div>
+        <div class="fld">Title size<input type="number" id="titleSize" value="34" /></div>
+        <div class="fld">Gap<input type="number" id="gap" value="12" /></div>
+      </div>
+
+      <button class="btn" style="width:100%;margin-top:16px" onclick="saveTemplate()" id="saveTplBtn">Save Template &amp; Position</button>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="panel">
+      <h2>Events</h2>
+      <div class="hint">Creating an event makes a new sheet tab for its data and a matching tab in the dashboard. New cards are saved to the newest event.</div>
+      <div class="row">
+        <input type="text" id="newEvent" placeholder="e.g. Ramadan 2027" style="flex:1;min-width:180px" />
+        <button class="btn" onclick="createEvent()" style="min-width:130px">Create</button>
+      </div>
+      <div class="evlist" id="evList"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="panel">
+      <h2>Dashboard</h2>
+      <div class="hint">View who generated cards, device breakdown, and full employee list.</div>
+      <button class="btn" style="width:100%" onclick="openDash()">Open Dashboard</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var TOKEN=null, CFG=null, IMG_B64=null;
+var CANVAS_W=1080, CANVAS_H=1350;
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2600);
+}
+
+async function api(payload){
+  if(TOKEN) payload.token=TOKEN;
+  var res=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  return res.json();
+}
+
+// ── login ──
+async function doLogin(){
+  var pw=document.getElementById('pw').value;
+  document.getElementById('loginErr').textContent='';
+  var d=await api({action:'login',password:pw});
+  if(d.token){
+    TOKEN=d.token;
+    sessionStorage.setItem('eidToken',TOKEN);
+    showApp();
+  }else{
+    document.getElementById('loginErr').textContent=d.error||'Login failed';
+  }
+}
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+function logout(){
+  sessionStorage.removeItem('eidToken');
+  location.reload();
+}
+function openDash(){ window.location.href='dashboard.html'; }
+
+async function showApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  var d=await api({action:'getAdminConfig'});
+  if(d.error){ sessionStorage.removeItem('eidToken'); location.reload(); return; }
+  CFG=d.config; IMG_B64=d.image;
+  document.getElementById('curEvent').textContent='Current event: '+(CFG.eventName||'-');
+  document.getElementById('headline').value=CFG.headline||'';
+  document.getElementById('nameSize').value=CFG.nameSize;
+  document.getElementById('titleSize').value=CFG.titleSize;
+  document.getElementById('gap').value=CFG.gap;
+  renderStatus();
+  renderEvents(d.events||[]);
+  if(IMG_B64){
+    loadEditorImage('data:image/jpeg;base64,'+IMG_B64);
+  }else{
+    // no image saved yet — load the bundled template and convert it
+    var im=new Image();
+    im.onload=function(){
+      var c=document.createElement('canvas');
+      c.width=CANVAS_W; c.height=CANVAS_H;
+      c.getContext('2d').drawImage(im,0,0,CANVAS_W,CANVAS_H);
+      var du=c.toDataURL('image/jpeg',0.85);
+      IMG_B64=du.split(',')[1];
+      loadEditorImage(du);
+      document.getElementById('fileLabel').textContent='Using the current template — press Save once to store it, or upload a new one';
+    };
+    im.src='template.jpg';
+  }
+}
+
+function renderStatus(){
+  var open=CFG.status==='open';
+  var p=document.getElementById('statusPill');
+  p.className='pill-status '+(open?'st-open':'st-closed');
+  p.innerHTML='<span class="dot"></span> '+(open?'OPEN':'CLOSED');
+  document.getElementById('toggleBtn').textContent=open?'Close Portal':'Open Portal';
+}
+
+async function toggleStatus(){
+  var next=CFG.status==='open'?'closed':'open';
+  var d=await api({action:'saveConfig',status:next});
+  if(d.config){ CFG=d.config; renderStatus(); toast(next==='open'?'Portal is now OPEN':'Portal is now CLOSED'); }
+  else toast(d.error||'Failed');
+}
+
+async function saveHeadline(){
+  var d=await api({action:'saveConfig',headline:document.getElementById('headline').value});
+  if(d.config){ CFG=d.config; toast('Message saved'); } else toast(d.error||'Failed');
+}
+
+function renderEvents(list){
+  var el=document.getElementById('evList');
+  if(!list.length){ el.innerHTML='<div class="ev"><span style="color:var(--muted)">No events yet</span></div>'; return; }
+  el.innerHTML=list.map(function(r){
+    var active=(r[1]===CFG.eventSheet);
+    return '<div class="ev"><span>'+r[0]+'</span>'+(active?'<span class="tag">ACTIVE</span>':'<span style="color:var(--muted);font-size:0.75rem">'+r[1]+'</span>')+'</div>';
+  }).join('');
+}
+
+async function createEvent(){
+  var name=document.getElementById('newEvent').value.trim();
+  if(!name){toast('Enter an event name');return;}
+  toast('Creating...');
+  var d=await api({action:'createEvent',name:name});
+  if(d.created){ document.getElementById('newEvent').value=''; toast('Event created'); showApp(); }
+  else toast(d.error||'Failed');
+}
+
+// ── image upload ──
+document.getElementById('fileInput').addEventListener('change',function(e){
+  var f=e.target.files[0]; if(!f) return;
+  document.getElementById('fileLabel').textContent='Processing '+f.name+'...';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var c=document.createElement('canvas');
+      c.width=CANVAS_W; c.height=CANVAS_H;
+      c.getContext('2d').drawImage(img,0,0,CANVAS_W,CANVAS_H);
+      var dataUrl=c.toDataURL('image/jpeg',0.85);
+      IMG_B64=dataUrl.split(',')[1];
+      loadEditorImage(dataUrl);
+      document.getElementById('fileLabel').textContent='Loaded: '+f.name+' — now position the box and save';
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+// ── editor ──
+var eImg=document.getElementById('editorImg');
+var eBox=document.getElementById('pillBox');
+var tplImg=new Image();
+
+function loadEditorImage(src){
+  eImg.src=src;
+  tplImg.onload=function(){ drawPreview(); };
+  tplImg.src=src;
+  eImg.onload=function(){ placeBoxFromConfig(); drawPreview(); };
+}
+
+function scale(){ return eImg.clientWidth/CANVAS_W; }
+
+function placeBoxFromConfig(){
+  var s=scale();
+  var top=Number(CFG.pillTop), bot=Number(CFG.pillBottom);
+  var cx=Number(CFG.pillCenterX), w=Number(CFG.pillMaxW);
+  var left=cx-w/2;
+  eBox.style.left=(left*s)+'px';
+  eBox.style.top=(top*s)+'px';
+  eBox.style.width=(w*s)+'px';
+  eBox.style.height=((bot-top)*s)+'px';
+}
+
+function boxToCanvas(){
+  var s=scale();
+  var left=parseFloat(eBox.style.left)/s;
+  var top=parseFloat(eBox.style.top)/s;
+  var w=parseFloat(eBox.style.width)/s;
+  var h=parseFloat(eBox.style.height)/s;
+  return {top:Math.round(top),bottom:Math.round(top+h),centerX:Math.round(left+w/2),maxW:Math.round(w)};
+}
+
+var drag=null;
+function pt(e){ var t=e.touches?e.touches[0]:e; return {x:t.clientX,y:t.clientY}; }
+
+eBox.addEventListener('mousedown',startDrag);
+eBox.addEventListener('touchstart',startDrag,{passive:false});
+function startDrag(e){
+  e.preventDefault(); e.stopPropagation();
+  var h=e.target.getAttribute('data-h');
+  var p=pt(e);
+  drag={mode:h||'move',x:p.x,y:p.y,
+    left:parseFloat(eBox.style.left),top:parseFloat(eBox.style.top),
+    w:parseFloat(eBox.style.width),h:parseFloat(eBox.style.height)};
+}
+document.addEventListener('mousemove',onDrag);
+document.addEventListener('touchmove',onDrag,{passive:false});
+function onDrag(e){
+  if(!drag) return;
+  e.preventDefault();
+  var p=pt(e);
+  var dx=p.x-drag.x, dy=p.y-drag.y;
+  if(drag.mode==='move'){
+    eBox.style.left=(drag.left+dx)+'px';
+    eBox.style.top=(drag.top+dy)+'px';
+  }else if(drag.mode==='se'){
+    eBox.style.width=Math.max(40,drag.w+dx)+'px';
+    eBox.style.height=Math.max(24,drag.h+dy)+'px';
+  }else if(drag.mode==='nw'){
+    var nw=Math.max(40,drag.w-dx), nh=Math.max(24,drag.h-dy);
+    eBox.style.left=(drag.left+(drag.w-nw))+'px';
+    eBox.style.top=(drag.top+(drag.h-nh))+'px';
+    eBox.style.width=nw+'px';
+    eBox.style.height=nh+'px';
+  }
+  drawPreview();
+}
+document.addEventListener('mouseup',function(){drag=null;});
+document.addEventListener('touchend',function(){drag=null;});
+
+['sampleName','sampleTitle','nameSize','titleSize','gap'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',drawPreview);
+});
+
+function isArabic(t){return /[\u0600-\u06FF]/.test(t);}
+function getFont(t,s,reg){
+  if(reg) return s+'px "'+(isArabic(t)?'LumaRegular':'KarbonRegular')+'"';
+  return s+'px "'+(isArabic(t)?'LumaSemiBold':'KarbonBold')+'"';
+}
+
+function drawPreview(){
+  if(!tplImg.complete||!tplImg.naturalWidth) return;
+  var P=boxToCanvas();
+  P.nameSize=Number(document.getElementById('nameSize').value)||47;
+  P.titleSize=Number(document.getElementById('titleSize').value)||34;
+  P.gap=Number(document.getElementById('gap').value)||12;
+  var name=document.getElementById('sampleName').value.trim();
+  var title=document.getElementById('sampleTitle').value.trim();
+  var ctx=document.getElementById('previewCanvas').getContext('2d');
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.drawImage(tplImg,0,0,CANVAS_W,CANVAS_H);
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  var pillH=P.bottom-P.top;
+  if(!name&&!title) return;
+  if(title){
+    var fs=P.nameSize; ctx.font=getFont(name,fs,false);
+    while(ctx.measureText(name).width>P.maxW&&fs>20){fs-=2;ctx.font=getFont(name,fs,false);}
+    var nm=ctx.measureText(name);
+    var nameH=nm.actualBoundingBoxAscent+nm.actualBoundingBoxDescent;
+    var tf=P.titleSize; ctx.font=getFont(title,tf,true);
+    while(ctx.measureText(title).width>P.maxW&&tf>16){tf--;ctx.font=getFont(title,tf,true);}
+    var tm=ctx.measureText(title);
+    var titleH=tm.actualBoundingBoxAscent+tm.actualBoundingBoxDescent;
+    var totalH=nameH+P.gap+titleH;
+    var blockTop=P.top+(pillH-totalH)/2;
+    ctx.font=getFont(name,fs,false);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText(name,P.centerX,blockTop+nm.actualBoundingBoxAscent);
+    ctx.font=getFont(title,tf,true);
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.fillText(title,P.centerX,blockTop+nameH+P.gap+tm.actualBoundingBoxAscent);
+  }else{
+    var f2=P.nameSize; ctx.font=getFont(name,f2,false);
+    while(ctx.measureText(name).width>P.maxW&&f2>20){f2-=2;ctx.font=getFont(name,f2,false);}
+    var n2=ctx.measureText(name);
+    var h2=n2.actualBoundingBoxAscent+n2.actualBoundingBoxDescent;
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText(name,P.centerX,P.top+(pillH-h2)/2+n2.actualBoundingBoxAscent);
+  }
+}
+
+async function saveTemplate(){
+  var btn=document.getElementById('saveTplBtn');
+  btn.textContent='Saving...'; btn.disabled=true;
+  try{
+    var P=boxToCanvas();
+    var r1=await api({action:'saveImage',image:IMG_B64});
+    if(r1.error) throw new Error(r1.error);
+    var r2=await api({action:'saveConfig',
+      pillTop:P.top,pillBottom:P.bottom,pillCenterX:P.centerX,pillMaxW:P.maxW,
+      nameSize:document.getElementById('nameSize').value,
+      titleSize:document.getElementById('titleSize').value,
+      gap:document.getElementById('gap').value});
+    if(r2.error) throw new Error(r2.error);
+    CFG=r2.config;
+    toast('Saved — the card page is updated');
+  }catch(e){ toast(e.message||'Save failed'); }
+  btn.textContent='Save Template & Position'; btn.disabled=false;
+}
+
+// fonts for preview
+var FONTS_URL='fonts.js';
+var s=document.createElement('script');
+s.src=FONTS_URL;
+s.onload=function(){ if(window.loadPreviewFonts) window.loadPreviewFonts().then(drawPreview); };
+document.head.appendChild(s);
+
+// auto-login if session exists
+var saved=sessionStorage.getItem('eidToken');
+if(saved){ TOKEN=saved; showApp(); }
+</script>
+</body>
+</html>

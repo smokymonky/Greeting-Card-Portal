@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Card Generating Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F5CE3E;--gold2:#e8a800;--bg:#0f0818;--card:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.08);--text:#ffffff;--muted:rgba(255,255,255,0.45);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);background-image:radial-gradient(ellipse at top,#2d0a5e33 0%,transparent 60%);font-family:'Cairo',sans-serif;min-height:100vh;color:var(--text);padding-bottom:60px;}
+  .topbar{background:linear-gradient(135deg,#2d0a5e,#1a0533);padding:18px 16px 20px;border-bottom:1px solid rgba(245,206,62,0.15);}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .topbar-left h1{font-size:1.15rem;font-weight:900;color:var(--gold);line-height:1.2;}
+  .topbar-left p{font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .tb-actions{display:flex;gap:8px;flex-shrink:0;}
+  .refresh-btn{background:rgba(245,206,62,0.12);border:1px solid rgba(245,206,62,0.3);color:var(--gold);border-radius:20px;padding:8px 14px;font-family:'Cairo',sans-serif;font-size:0.76rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .refresh-btn:active{background:rgba(245,206,62,0.22);}
+  .tabs{display:flex;gap:0;padding:0 16px;background:linear-gradient(135deg,#2d0a5e,#1a0533);border-bottom:1px solid rgba(245,206,62,0.15);overflow-x:auto;}
+  .tab-btn{flex:1;min-width:130px;padding:12px 10px;font-family:'Cairo',sans-serif;font-size:0.82rem;font-weight:700;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .content{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .section-title{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding-left:2px;}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 14px;position:relative;overflow:hidden;}
+  .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));opacity:0.5;}
+  .stat-card.full{grid-column:1/-1;}
+  .stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .stat-label{font-size:0.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;}
+  .stat-icon{font-size:1.4rem;}
+  .stat-val{font-size:2rem;font-weight:900;color:var(--gold);line-height:1;display:block;}
+  .stat-card.full .stat-val{font-size:2.6rem;}
+  .table-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  .table-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .table-header h3{font-size:0.88rem;font-weight:700;color:var(--text);}
+  .table-count{background:rgba(245,206,62,0.12);color:var(--gold);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{width:100%;border-collapse:collapse;font-size:0.8rem;min-width:400px;}
+  th{text-align:left;color:var(--muted);font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);white-space:nowrap;}
+  td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .name-cell{font-weight:700;color:var(--text);white-space:nowrap;}
+  .title-cell{color:var(--muted);font-size:0.75rem;max-width:130px;}
+  .time-cell{color:rgba(255,255,255,0.28);font-size:0.7rem;white-space:nowrap;}
+  .badge-ios{background:rgba(100,200,255,0.12);color:#64c8ff;border-radius:6px;padding:2px 8px;font-size:0.7rem;font-weight:700;white-space:nowrap;display:inline-block;}
+  .badge-and{background:rgba(100,255,150,0.12);color:#64ff96;border-radius:6px;padding:2px 8px;font-size:0.7rem;font-weight:700;white-space:nowrap;display:inline-block;}
+  .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 0;color:var(--muted);font-size:0.85rem;}
+  .spinner{width:30px;height:30px;border:2.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error-box{background:rgba(255,80,80,0.08);border:1px solid rgba(255,80,80,0.2);border-radius:12px;padding:16px;color:#ff9090;text-align:center;font-size:0.85rem;line-height:1.7;}
+  .empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:0.85rem;}
+  .footer{text-align:center;color:rgba(255,255,255,0.18);font-size:0.7rem;margin-top:24px;}
+  #gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;}
+  #gate h2{color:var(--gold);font-size:1.2rem;font-weight:800;}
+  #gate p{color:var(--muted);font-size:0.9rem;}
+  #gate a{color:var(--gold);text-decoration:none;border:1px solid rgba(245,206,62,0.35);border-radius:12px;padding:12px 24px;font-weight:700;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div style="font-size:2.6rem">&#x1F512;</div>
+  <h2>Sign in required</h2>
+  <p>Please sign in from the admin page to view the dashboard.</p>
+  <a href="admin.html">Go to Admin</a>
+</div>
+
+<div id="main" style="display:none">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <h1>&#x1F4CA; Card Generating Analytics</h1>
+        <p id="lastUpdated">Loading...</p>
+      </div>
+      <div class="tb-actions">
+        <button class="refresh-btn" onclick="loadData()">&#8635; Refresh</button>
+        <button class="refresh-btn" onclick="location.href='admin.html'">Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="content">
+    <div class="section-title">&#x1F4CA; All Time Stats</div>
+    <div id="statsArea"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+    <div class="section-title">&#x1F4CB; Employee List</div>
+    <div id="tableArea"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <div class="footer">Abdul Latif Jameel &middot; Eid Card Portal</div>
+</div>
+
+<script>
+var TOKEN=sessionStorage.getItem('eidToken');
+var ACTIVE_SHEET=null;
+var EVENTS=[];
+
+if(!TOKEN){
+  document.getElementById('gate').style.display='flex';
+}else{
+  document.getElementById('gate').style.display='none';
+  document.getElementById('main').style.display='block';
+  loadData();
+  setInterval(loadData,60000);
+}
+
+async function api(payload){
+  payload.token=TOKEN;
+  var res=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  return res.json();
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function renderTabs(){
+  var el=document.getElementById('tabs');
+  el.innerHTML=EVENTS.map(function(e){
+    var act=(e[1]===ACTIVE_SHEET)?' active':'';
+    return '<button class="tab-btn'+act+'" onclick="switchTab(\''+e[1]+'\')">'+esc(e[0])+'</button>';
+  }).join('');
+}
+
+function switchTab(sheet){
+  ACTIVE_SHEET=sheet;
+  renderTabs();
+  loadData(sheet);
+}
+
+async function loadData(sheet){
+  document.getElementById('statsArea').innerHTML='<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+  document.getElementById('tableArea').innerHTML='<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+  try{
+    var d=await api({action:'getDashboard',sheet:sheet||ACTIVE_SHEET});
+    if(d.error){
+      if(d.error==='Not authorised'){ sessionStorage.removeItem('eidToken'); location.reload(); return; }
+      throw new Error(d.error);
+    }
+    EVENTS=d.events||[];
+    ACTIVE_SHEET=d.sheet;
+    renderTabs();
+
+    var rows=d.rows||[];
+    var total=rows.length;
+    var ios=rows.filter(function(r){return r[2]==='iPhone';}).length;
+    var android=rows.filter(function(r){return r[2]==='Android';}).length;
+
+    document.getElementById('lastUpdated').textContent='Updated: '+new Date().toLocaleTimeString('en-GB');
+
+    document.getElementById('statsArea').innerHTML=
+      '<div class="stats-grid">'+
+        '<div class="stat-card full"><div class="stat-top"><span class="stat-label">Total Cards Generated</span><span class="stat-icon">&#x1F3B4;</span></div><span class="stat-val">'+total.toLocaleString()+'</span></div>'+
+        '<div class="stat-card"><div class="stat-top"><span class="stat-label">iPhone Users</span><span class="stat-icon">&#x1F34E;</span></div><span class="stat-val">'+ios.toLocaleString()+'</span></div>'+
+        '<div class="stat-card"><div class="stat-top"><span class="stat-label">Android Users</span><span class="stat-icon">&#x1F916;</span></div><span class="stat-val">'+android.toLocaleString()+'</span></div>'+
+      '</div>';
+
+    var rev=rows.slice().reverse();
+    document.getElementById('tableArea').innerHTML = rev.length ?
+      '<div class="table-card">'+
+        '<div class="table-header"><h3>Employee Cards</h3><span class="table-count">'+total+' total</span></div>'+
+        '<div class="table-wrap"><table><thead><tr><th>Full Name</th><th>Job Title</th><th>Device</th><th>Date</th><th>Time</th></tr></thead><tbody>'+
+        rev.map(function(r){
+          var isI=r[2]==='iPhone';
+          return '<tr>'+
+            '<td class="name-cell">'+esc(r[0]||'-')+'</td>'+
+            '<td class="title-cell">'+esc(r[1]||'-')+'</td>'+
+            '<td><span class="'+(isI?'badge-ios':'badge-and')+'">'+(isI?'&#x1F34E; iPhone':'&#x1F916; Android')+'</span></td>'+
+            '<td class="time-cell">'+esc(r[3]||'-')+'</td>'+
+            '<td class="time-cell">'+esc(r[4]||'-')+'</td>'+
+          '</tr>';
+        }).join('')+
+        '</tbody></table></div>'+
+      '</div>'
+      : '<div class="table-card"><div class="empty">&#x1F319; No cards generated yet<br>Share the link with employees!</div></div>';
+
+  }catch(e){
+    document.getElementById('statsArea').innerHTML='<div class="error-box"><strong>Could not load data</strong><br>'+esc(e.message)+'</div>';
+    document.getElementById('tableArea').innerHTML='';
+  }
+}
+</script>
+</body>
+</html>
